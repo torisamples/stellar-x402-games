@@ -71,19 +71,26 @@ export class DevWallet {
   }
 
   async connect() {
-    const saved = localStorage.getItem("devWallet");
+    // Add ?wallet=contract to the URL to play as a smart-wallet-style
+    // CONTRACT ACCOUNT (C...) instead of a classic keypair.
+    const type = new URLSearchParams(location.search).get("wallet") === "contract" ? "contract" : "ed25519";
+    const saved = localStorage.getItem(`devWallet:${type}`);
     if (saved) {
       const { address, secret } = JSON.parse(saved);
       this.address = address;
       this.secret = secret;
       return address;
     }
-    const res = await fetch("/api/dev/wallet", { method: "POST" });
+    const res = await fetch("/api/dev/wallet", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type }),
+    });
     if (!res.ok) throw new Error("Dev wallet unavailable. Is the server running with DEV_MODE=true?");
     const data = await res.json();
     this.address = data.address;
     this.secret = data.secret;
-    localStorage.setItem("devWallet", JSON.stringify(data));
+    localStorage.setItem(`devWallet:${type}`, JSON.stringify(data));
     return this.address;
   }
 
@@ -91,7 +98,7 @@ export class DevWallet {
     const res = await fetch("/api/dev/pay", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ headers, secret: this.secret }),
+      body: JSON.stringify({ headers, address: this.address, secret: this.secret }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Dev payment signing failed.");

@@ -39,14 +39,24 @@ async function payAndCall(path, body) {
 
 const start = Date.now();
 
-// 1) Dev wallet (this is the "player")
-const wres = await fetch(BASE + "/api/dev/wallet", { method: "POST" });
+// 1) Dev wallet (this is the "player").
+//    PLAYER_TYPE=contract -> a smart-wallet-style CONTRACT ACCOUNT (C...) that
+//    both PAYS the entry fee and RECEIVES the prizes (the Meridian Pay case).
+const walletType = process.env.PLAYER_TYPE === "contract" ? "contract" : "ed25519";
+const wres = await fetch(BASE + "/api/dev/wallet", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ type: walletType }),
+});
 const wallet = await j(wres);
 if (!wres.ok) throw new Error("wallet: " + JSON.stringify(wallet));
-log("player wallet:", wallet.address);
+// PLAYER_ADDRESS optionally points payouts somewhere other than the payer.
+const PLAYER = process.env.PLAYER_ADDRESS || wallet.address;
+log(`player wallet (${wallet.type}):`, wallet.address);
+if (PLAYER !== wallet.address) log("payout destination override:", PLAYER);
 
 // 2) Wheel: pay 0.5 XLM via x402, then spin
-const s1 = await payAndCall("/api/wheel/session", { address: wallet.address });
+const s1 = await payAndCall("/api/wheel/session", { address: PLAYER });
 log("wheel session:", s1.status, JSON.stringify(s1.data));
 if (s1.status !== 200) throw new Error("wheel session failed");
 
@@ -68,7 +78,7 @@ const spin2 = await fetch(BASE + "/api/wheel/spin", {
 log("double-spin blocked:", spin2.status === 409 ? "OK" : `FAIL (${spin2.status})`);
 
 // 3) Trivia: pay, then answer all 10 (alternate right-ish/wrong answers blindly)
-const t = await payAndCall("/api/trivia/session", { address: wallet.address });
+const t = await payAndCall("/api/trivia/session", { address: PLAYER });
 log("trivia session:", t.status, JSON.stringify(t.data).slice(0, 160));
 if (t.status !== 200) throw new Error("trivia session failed");
 
@@ -90,7 +100,7 @@ log("trivia final:", JSON.stringify({ score: final.score, totalXlm: final.totalX
 const replay = await fetch(BASE + "/api/trivia/session", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ address: wallet.address }),
+  body: JSON.stringify({ address: PLAYER }),
 });
 log("trivia replay blocked pre-payment:", replay.status === 403 ? "OK" : `FAIL (${replay.status})`);
 

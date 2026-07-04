@@ -33,10 +33,11 @@ cp .env.example .env          # set PAYOUT_SECRET (fund at https://lab.stellar.o
 npm run dev                   # starts with DEV_MODE=true on :3001
 ```
 
-Open http://localhost:3001 — "Connect Wallet" uses the dev wallet (a friendbot-funded testnet keypair signed server-side), so you can play both games end-to-end with zero setup. `test/e2e.js` runs the whole loop headlessly:
+Open http://localhost:3001 — "Connect Wallet" uses the dev wallet (a friendbot-funded testnet keypair signed server-side), so you can play both games end-to-end with zero setup. Add `?wallet=contract` to a game URL to play as a **contract account** (C...) instead — a deployed custom account contract that both pays the entry fees and receives the prizes, exactly like a Meridian Pay smart wallet. `test/e2e.js` runs the whole loop headlessly:
 
 ```bash
-node test/e2e.js              # against a running server
+node test/e2e.js                       # classic G... player
+PLAYER_TYPE=contract node test/e2e.js  # smart-wallet-style C... player (payer == receiver)
 ```
 
 ## Deploy to Vercel
@@ -69,9 +70,9 @@ connect() -> address                      // C... contract account
 createPaymentHeaders({headers, body})     // 402 -> signed X-PAYMENT headers
 ```
 
-`MeridianPayWallet` is stubbed with TODOs at the exact integration points: `connect()` should resolve the signed-in session's contract address, and `createPaymentHeaders` should feed the wallet's SEP-43-style signer (passkey signs the Soroban auth entry) into `ExactStellarScheme` from `@x402/stellar/exact/client` (bundle it or load from esm.sh). Everything else — paywall, payouts to C-addresses, limits — already handles contract accounts.
+`MeridianPayWallet` is stubbed with TODOs at the exact integration points: `connect()` should resolve the signed-in session's contract address, and `createPaymentHeaders` should produce a signed payment payload. **`server/contract-wallet.js` is the working reference for that second part**: its `ContractAccountScheme` builds the SEP-41 transfer with a C... payer, signs the Soroban auth entry, and sets the signature ScVal in the format the account contract's `__check_auth` expects. Meridian Pay does the same thing with a WebAuthn/passkey signature instead of ed25519 — swap the `owner.sign(payloadHash)` line for the passkey assertion and adjust the signature ScVal to the wallet contract's format.
 
-**Note:** the C-address payout path (native SAC `transfer` via Soroban RPC) is implemented but was verified only against G-addresses in testing; give it one smoke test with a real Meridian Pay wallet.
+The full contract-account flow — a C... account paying the x402 entry fee **and** receiving prizes — is verified end-to-end on testnet (`PLAYER_TYPE=contract node test/e2e.js`), including settlement through Coinbase's facilitator. The demo uses the `simple_account` contract from stellar/rs-soroban-env (`test/fixtures/simple_account.wasm`) as the smart-wallet stand-in.
 
 ## Booth operations
 
