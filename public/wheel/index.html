@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Spin the Wheel — Stellar Arcade</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="stars"></div>
+  <main>
+    <header class="site">
+      <h1>🎡 Spin the <span class="gold">Wheel</span></h1>
+      <p class="sub">0.5 XLM per spin · up to 3 spins · prizes land in your wallet in seconds</p>
+    </header>
+
+    <div class="card center">
+      <div class="row">
+        <span class="pill"><span class="dot" id="walletDot"></span><span id="walletLabel">No wallet connected</span></span>
+        <span class="pill">Spins used: <b id="playsUsed">–</b>/<b id="playsMax">3</b></span>
+      </div>
+
+      <div id="wheelWrap" class="mt">
+        <div id="pointer"></div>
+        <canvas id="wheel" width="760" height="760"></canvas>
+      </div>
+
+      <div class="row mt">
+        <button class="btn ghost" id="connectBtn">Connect Wallet</button>
+        <button class="btn" id="spinBtn" disabled>Pay 0.5 XLM &amp; Spin</button>
+      </div>
+      <p class="status" id="status"></p>
+      <p class="small muted">Payment happens over HTTP via the x402 protocol — your wallet signs, a facilitator settles on Stellar, the wheel unlocks.</p>
+    </div>
+    <p class="center mt"><a class="muted small" href="/">← Stellar Arcade</a></p>
+  </main>
+
+  <div class="modal" id="modal">
+    <div class="inner">
+      <div id="resultEmoji" style="font-size:3rem"></div>
+      <div class="prize" id="resultPrize"></div>
+      <div id="resultDetail" class="muted"></div>
+      <div class="mt">
+        <button class="btn secondary" id="againBtn">Spin Again</button>
+        <button class="btn ghost" id="closeBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { pickWallet } from "/js/wallet.js";
+    import { fetchWithX402 } from "/js/x402-client.js";
+
+    const COLORS = { xlm: ["#7b61ff", "#5a45c9"], swag: ["#00e0c7", "#00a894"], vip: ["#fdda24", "#e0a800"] };
+    const $ = (id) => document.getElementById(id);
+    const canvas = $("wheel"), ctx = canvas.getContext("2d");
+
+    let segments = [], rotation = 0, spinning = false;
+    const wallet = pickWallet();
+    let address = null;
+
+    function drawWheel(rot) {
+      const c = canvas.width / 2, R = c - 12, n = segments.length || 10;
+      const seg = (2 * Math.PI) / n;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(c, c);
+      ctx.rotate(rot);
+      for (let i = 0; i < n; i++) {
+        const a0 = -Math.PI / 2 + i * seg, a1 = a0 + seg;
+        const s = segments[i] || { type: "xlm", label: "…" };
+        const [c1, c2] = COLORS[s.type] || COLORS.xlm;
+        const grad = ctx.createRadialGradient(0, 0, R * 0.2, 0, 0, R);
+        grad.addColorStop(0, c1); grad.addColorStop(1, c2);
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R, a0, a1); ctx.closePath();
+        ctx.fillStyle = grad; ctx.fill();
+        ctx.strokeStyle = "#0c0e1a"; ctx.lineWidth = 4; ctx.stroke();
+        // label
+        ctx.save();
+        ctx.rotate(a0 + seg / 2);
+        ctx.textAlign = "right"; ctx.textBaseline = "middle";
+        ctx.fillStyle = s.type === "vip" ? "#3a2f00" : "#ffffff";
+        ctx.font = `700 ${s.type === "vip" ? 30 : 27}px system-ui, sans-serif`;
+        ctx.fillText(s.label, R - 22, 0);
+        ctx.restore();
+      }
+      // hub
+      ctx.beginPath(); ctx.arc(0, 0, R * 0.16, 0, 7);
+      ctx.fillStyle = "#161a2e"; ctx.fill();
+      ctx.strokeStyle = "#fdda24"; ctx.lineWidth = 5; ctx.stroke();
+      ctx.fillStyle = "#fdda24"; ctx.font = "700 34px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("★", 0, 2);
+      ctx.restore();
+    }
+
+    function animateTo(segmentIndex) {
+      return new Promise((resolve) => {
+        const n = segments.length, segDeg = 360 / n;
+        const center = segmentIndex * segDeg + segDeg / 2;
+        const jitter = (Math.random() - 0.5) * (segDeg * 0.6);
+        const targetDeg = 5 * 360 + ((360 - center + jitter) % 360);
+        const start = rotation, delta = (targetDeg * Math.PI) / 180 - (start % (2 * Math.PI)) + 0;
+        const total = (targetDeg * Math.PI) / 180;
+        const dur = 4600, t0 = performance.now();
+        function frame(t) {
+          const p = Math.min(1, (t - t0) / dur);
+          const ease = 1 - Math.pow(1 - p, 4); // easeOutQuart
+          rotation = start + total * ease;
+          drawWheel(rotation);
+          if (p < 1) requestAnimationFrame(frame);
+          else { rotation = rotation % (2 * Math.PI); resolve(); }
+        }
+        requestAnimationFrame(frame);
+      });
+    }
+
+    async function loadConfig() {
+      const q = address ? `?address=${address}` : "";
+      const cfg = await (await fetch(`/api/wheel/config${q}`)).json();
+      segments = cfg.segments;
+      $("playsMax").textContent = cfg.maxPlays;
+      $("playsUsed").textContent = address ? cfg.playsUsed : "–";
+      drawWheel(rotation);
+      return cfg;
+    }
+
+    function setStatus(msg, err = false) {
+      const el = $("status");
+      el.textContent = msg;
+      el.className = "status" + (err ? " err" : "");
+    }
+
+    $("connectBtn").onclick = async () => {
+      try {
+        setStatus("Connecting wallet…");
+        address = await wallet.connect();
+        $("walletDot").classList.add("on");
+        $("walletLabel").textContent = `${wallet.label()}: ${address.slice(0, 4)}…${address.slice(-4)}`;
+        $("spinBtn").disabled = false;
+        await loadConfig();
+        setStatus("Wallet connected. Good luck! 🍀");
+      } catch (e) { setStatus(e.message, true); }
+    };
+
+    $("spinBtn").onclick = async () => {
+      if (spinning || !address) return;
+      spinning = true; $("spinBtn").disabled = true;
+      try {
+        setStatus("Requesting spin… (x402 payment: 0.5 XLM)");
+        const sres = await fetchWithX402("/api/wheel/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address }),
+        }, wallet);
+        const sdata = await sres.json();
+        if (!sres.ok) throw new Error(sdata.error || `Session failed (${sres.status})`);
+        $("playsUsed").textContent = sdata.playsUsed;
+
+        setStatus("Payment settled on Stellar ✓ — spinning!");
+        const rres = await fetch("/api/wheel/spin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: sdata.token }),
+        });
+        const result = await rres.json();
+        if (!rres.ok) throw new Error(result.error || "Spin failed");
+
+        await animateTo(result.segmentIndex);
+        showResult(result);
+        setStatus("");
+      } catch (e) {
+        setStatus(e.message, true);
+      } finally {
+        spinning = false;
+        $("spinBtn").disabled = false;
+      }
+    };
+
+    function showResult(r) {
+      const { prize } = r;
+      $("resultEmoji").textContent = prize.type === "vip" ? "📸" : prize.type === "swag" ? "🎁" : "💰";
+      $("resultPrize").textContent = prize.label;
+      let detail = "";
+      if (prize.type === "xlm") {
+        if (r.payout?.status === "paid") {
+          detail = `${prize.amount} XLM sent to your wallet!<br><span class="small">tx: <code>${r.payout.tx.slice(0, 10)}…</code></span>`;
+        } else if (r.payout?.status === "skipped") {
+          detail = `You won ${prize.amount} XLM (payout pending — no hot wallet configured).`;
+        } else {
+          detail = `You won ${prize.amount} XLM — payout hiccup, the booth crew has your back: <code>${r.payout?.error ?? ""}</code>`;
+        }
+      } else {
+        detail = `${r.redeemNote}<br><span class="code">${r.redemptionCode}</span><br><span class="small muted">Screenshot this code!</span>`;
+      }
+      $("resultDetail").innerHTML = detail;
+      $("modal").classList.add("show");
+    }
+
+    $("againBtn").onclick = () => { $("modal").classList.remove("show"); $("spinBtn").click(); };
+    $("closeBtn").onclick = () => $("modal").classList.remove("show");
+
+    loadConfig().catch(() => setStatus("Could not load wheel config — is the server up?", true));
+  </script>
+</body>
+</html>
