@@ -56,6 +56,7 @@
     const canvas = $("wheel"), ctx = canvas.getContext("2d");
 
     let segments = [], rotation = 0, spinning = false;
+    let explorer = "https://stellar.expert/explorer/testnet";
     const wallet = pickWallet();
     let address = null;
 
@@ -95,20 +96,24 @@
 
     function animateTo(segmentIndex) {
       return new Promise((resolve) => {
+        const TAU = 2 * Math.PI;
         const n = segments.length, segDeg = 360 / n;
         const center = segmentIndex * segDeg + segDeg / 2;
         const jitter = (Math.random() - 0.5) * (segDeg * 0.6);
-        const targetDeg = 5 * 360 + ((360 - center + jitter) % 360);
-        const start = rotation, delta = (targetDeg * Math.PI) / 180 - (start % (2 * Math.PI)) + 0;
-        const total = (targetDeg * Math.PI) / 180;
+        // Absolute angle that puts this segment's center under the pointer.
+        const targetRad = ((((360 - center + jitter) % 360) + 360) % 360) * (Math.PI / 180);
+        // Spin 5 full turns, then land EXACTLY on targetRad from wherever we are now.
+        const start = rotation;
+        const startMod = ((start % TAU) + TAU) % TAU;
+        const delta = 5 * TAU + ((targetRad - startMod + TAU) % TAU);
         const dur = 4600, t0 = performance.now();
         function frame(t) {
           const p = Math.min(1, (t - t0) / dur);
           const ease = 1 - Math.pow(1 - p, 4); // easeOutQuart
-          rotation = start + total * ease;
+          rotation = start + delta * ease;
           drawWheel(rotation);
           if (p < 1) requestAnimationFrame(frame);
-          else { rotation = rotation % (2 * Math.PI); resolve(); }
+          else { rotation = ((start + delta) % TAU + TAU) % TAU; drawWheel(rotation); resolve(); }
         }
         requestAnimationFrame(frame);
       });
@@ -118,6 +123,7 @@
       const q = address ? `?address=${address}` : "";
       const cfg = await (await fetch(`/api/wheel/config${q}`)).json();
       segments = cfg.segments;
+      if (cfg.explorer) explorer = cfg.explorer;
       $("playsMax").textContent = cfg.maxPlays;
       $("playsUsed").textContent = address ? cfg.playsUsed : "–";
       drawWheel(rotation);
@@ -183,7 +189,7 @@
       let detail = "";
       if (prize.type === "xlm") {
         if (r.payout?.status === "paid") {
-          detail = `${prize.amount} XLM sent to your wallet!<br><span class="small">tx: <code>${r.payout.tx.slice(0, 10)}…</code></span>`;
+          detail = `${prize.amount} XLM sent to your wallet!<br><span class="small">tx: <a href="${explorer}/tx/${r.payout.tx}" target="_blank" rel="noopener"><code>${r.payout.tx.slice(0, 10)}…</code></a></span>`;
         } else if (r.payout?.status === "skipped") {
           detail = `You won ${prize.amount} XLM (payout pending — no hot wallet configured).`;
         } else {

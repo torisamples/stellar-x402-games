@@ -17,6 +17,10 @@ export const HORIZON_URL =
   process.env.HORIZON_URL ||
   (IS_TESTNET ? "https://horizon-testnet.stellar.org" : "https://horizon.stellar.org");
 
+export const EXPLORER_URL = IS_TESTNET
+  ? "https://stellar.expert/explorer/testnet"
+  : "https://stellar.expert/explorer/public";
+
 // Native XLM Stellar Asset Contract (SEP-41). Derived from Asset.native().contractId().
 export const NATIVE_XLM_SAC = IS_TESTNET
   ? "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"

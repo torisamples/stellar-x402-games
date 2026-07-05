@@ -3,11 +3,11 @@
 export const QUESTIONS = [
   {
     id: "q1",
-    q: "Before co-founding Stellar, Jed McCaleb built a Magic: The Gathering card-trading site that he later converted into... which infamous bitcoin exchange?",
-    choices: ["BitConnect", "Mt. Gox", "QuadrigaCX", "FTX"],
-    answerIndex: 1,
+    q: "Whose developers show up to build the most? One of these networks tops the others in monthly active developers — which is it?",
+    choices: ["Bitcoin", "Solana", "Stellar", "Cosmos"],
+    answerIndex: 2,
     funFact:
-      "Mt. Gox literally stands for 'Magic: The Gathering Online eXchange.' Jed sold it in 2011 — well before things went sideways.",
+      "Stellar out-builds some of the loudest ecosystems in crypto by monthly active developers — and after today, you're one transaction closer to being one of them.",
   },
   {
     id: "q2",
@@ -65,10 +65,11 @@ export const QUESTIONS = [
   },
   {
     id: "q8",
-    q: "Stellar's annual flagship conference — and the namesake of the Meridian Pay wallet you're using right now — is called...",
-    choices: ["Equator", "Meridian", "Perihelion", "StellarCon"],
+    q: "In July 2026, Stellar blew past a big real-world-asset milestone. How much RWA value now lives on-chain?",
+    choices: ["$300 million", "$3 billion", "$30 billion", "Priceless"],
     answerIndex: 1,
-    funFact: "Meridian has hopped the globe since 2019 — Mexico City, Cape Town, Rome, Madrid, London...",
+    funFact:
+      "Over $3 billion — after crossing $1B in January 2026, it tripled in under six months, powered by heavyweights like Spiko and Franklin Templeton's BENJI fund.",
   },
   {
     id: "q9",

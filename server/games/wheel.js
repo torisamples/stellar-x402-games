@@ -3,7 +3,7 @@
 import crypto from "node:crypto";
 import * as store from "../store.js";
 import { sendXlm } from "../payouts.js";
-import { ENTRY_FEE_XLM, WHEEL_MAX_PLAYS } from "../config.js";
+import { ENTRY_FEE_XLM, EXPLORER_URL, WHEEL_MAX_PLAYS } from "../config.js";
 
 // 10 segments. `weight` controls server-side odds (sums to 100).
 // Expected XLM payout per spin ≈ 0.905 XLM vs 0.5 XLM entry — conference-generous;
@@ -43,7 +43,7 @@ export function mountWheel(app) {
     const segments = SEGMENTS.map(({ id, type, label }) => ({ id, type, label }));
     const address = String(req.query.address || "");
     const playsUsed = ADDRESS_RE.test(address) ? await store.getPlays("wheel", address) : 0;
-    res.json({ segments, entryFeeXlm: ENTRY_FEE_XLM, maxPlays: WHEEL_MAX_PLAYS, playsUsed });
+    res.json({ segments, entryFeeXlm: ENTRY_FEE_XLM, maxPlays: WHEEL_MAX_PLAYS, playsUsed, explorer: EXPLORER_URL });
   });
 
   // PAYWALLED (x402 middleware runs first): buy one spin.

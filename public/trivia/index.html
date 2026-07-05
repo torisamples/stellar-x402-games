@@ -58,6 +58,7 @@
     const QUESTION_SECONDS = 12;
     const wallet = pickWallet();
     let address = null, token = null, timer = null, deadline = 0, answering = false;
+    let explorer = "https://stellar.expert/explorer/testnet";
     let results = []; // true/false per question
 
     function setStatus(msg, err = false) {
@@ -73,6 +74,7 @@
         $("walletDot").classList.add("on");
         $("walletLabel").textContent = `${wallet.label()}: ${address.slice(0, 4)}…${address.slice(-4)}`;
         const cfg = await (await fetch(`/api/trivia/config?address=${address}`)).json();
+        if (cfg.explorer) explorer = cfg.explorer;
         if (cfg.playsUsed >= cfg.maxPlays) {
           setStatus("This wallet already played its one run. 🏁", true);
         } else {
@@ -179,11 +181,12 @@
         ? `You earned <b class="teal">${data.totalXlm} XLM</b>!`
         : "No XLM this time — but now you know your Stellar lore.";
       const p = data.payout || {};
-      $("finPayout").textContent =
-        p.status === "paid" ? `Paid in one transaction · tx ${p.tx.slice(0, 12)}…`
-        : p.status === "skipped" && p.reason === "zero_score" ? ""
-        : p.status === "skipped" ? "Payout pending (no hot wallet configured on server)."
-        : `Payout issue — see booth staff. ${p.error ?? ""}`;
+      $("finPayout").innerHTML =
+        p.status === "paid"
+          ? `Paid in one transaction · tx <a href="${explorer}/tx/${p.tx}" target="_blank" rel="noopener"><code>${p.tx.slice(0, 12)}…</code></a>`
+          : p.status === "skipped" && p.reason === "zero_score" ? ""
+          : p.status === "skipped" ? "Payout pending (no hot wallet configured on server)."
+          : `Payout issue — see booth staff. ${p.error ?? ""}`;
     }
   </script>
 </body>

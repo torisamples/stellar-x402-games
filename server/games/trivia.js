@@ -5,6 +5,7 @@ import * as store from "../store.js";
 import { sendXlm } from "../payouts.js";
 import {
   ENTRY_FEE_XLM,
+  EXPLORER_URL,
   TRIVIA_ANSWER_WINDOW_MS,
   TRIVIA_MAX_PLAYS,
   TRIVIA_SESSION_MAX_MS,
@@ -26,6 +27,7 @@ export function mountTrivia(app) {
       maxPlays: TRIVIA_MAX_PLAYS,
       playsUsed,
       answerWindowMs: TRIVIA_ANSWER_WINDOW_MS,
+      explorer: EXPLORER_URL,
     });
   });
 
