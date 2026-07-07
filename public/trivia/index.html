@@ -94,6 +94,11 @@
           body: JSON.stringify({ address }),
         }, wallet);
         const data = await res.json();
+        if (res.status === 402) {
+          throw new Error(
+            `Payment didn't settle${data.error ? ` — ${data.error}` : ""}. Testnet hiccup — hit Start again!`,
+          );
+        }
         if (!res.ok) throw new Error(data.error || `Could not start (${res.status})`);
         token = data.token;
         $("lobby").style.display = "none";

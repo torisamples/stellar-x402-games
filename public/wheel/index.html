@@ -159,6 +159,11 @@
           body: JSON.stringify({ address }),
         }, wallet);
         const sdata = await sres.json();
+        if (sres.status === 402) {
+          throw new Error(
+            `Payment didn't settle${sdata.error ? ` — ${sdata.error}` : ""}. Testnet hiccup — spin again!`,
+          );
+        }
         if (!sres.ok) throw new Error(sdata.error || `Session failed (${sres.status})`);
         $("playsUsed").textContent = sdata.playsUsed;
 
