@@ -77,7 +77,7 @@
         grad.addColorStop(0, c1); grad.addColorStop(1, c2);
         ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R, a0, a1); ctx.closePath();
         ctx.fillStyle = grad; ctx.fill();
-        ctx.strokeStyle = "#0a0a0a"; ctx.lineWidth = 4; ctx.stroke();
+        ctx.strokeStyle = "#101010"; ctx.lineWidth = 3; ctx.stroke();
         // label
         ctx.save();
         ctx.rotate(a0 + seg / 2);
@@ -94,6 +94,25 @@
       ctx.fillStyle = "#fedb1d"; ctx.font = "800 34px 'Inter Tight', system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText("M", 0, 2);
       ctx.restore();
+    }
+
+    // Slow "charging" rotation while the x402 payment is in flight, so the
+    // wheel visibly reacts the instant you click Spin.
+    let idleReq = null;
+    function startIdleSpin() {
+      if (idleReq) return;
+      let last = performance.now();
+      const step = (t) => {
+        rotation += ((t - last) / 1000) * 1.5; // rad/s
+        last = t;
+        drawWheel(rotation);
+        idleReq = requestAnimationFrame(step);
+      };
+      idleReq = requestAnimationFrame(step);
+    }
+    function stopIdleSpin() {
+      if (idleReq) cancelAnimationFrame(idleReq);
+      idleReq = null;
     }
 
     function animateTo(segmentIndex) {
@@ -152,9 +171,13 @@
 
     $("spinBtn").onclick = async () => {
       if (spinning || !address) return;
-      spinning = true; $("spinBtn").disabled = true;
+      spinning = true;
+      const btn = $("spinBtn");
+      btn.disabled = true;
+      startIdleSpin(); // instant feedback: the wheel starts turning right away
       try {
-        setStatus("Requesting spin… (x402 payment: 0.5 XLM)");
+        btn.textContent = "Paying 0.5 XLM…";
+        setStatus("Paying via x402 — your wallet is signing…");
         const sres = await fetchWithX402("/api/wheel/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -169,7 +192,8 @@
         if (!sres.ok) throw new Error(sdata.error || `Session failed (${sres.status})`);
         $("playsUsed").textContent = sdata.playsUsed;
 
-        setStatus("Payment settled on Stellar ✓ — spinning!");
+        btn.textContent = "Spinning…";
+        setStatus("Payment settled on Stellar ✓");
         const rres = await fetch("/api/wheel/spin", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -178,14 +202,17 @@
         const result = await rres.json();
         if (!rres.ok) throw new Error(result.error || "Spin failed");
 
+        stopIdleSpin();
         await animateTo(result.segmentIndex);
         showResult(result);
         setStatus("");
       } catch (e) {
         setStatus(e.message, true);
       } finally {
+        stopIdleSpin();
         spinning = false;
-        $("spinBtn").disabled = false;
+        btn.disabled = false;
+        btn.textContent = "Pay 0.5 XLM & Spin";
       }
     };
 

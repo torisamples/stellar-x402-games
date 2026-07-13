@@ -12,12 +12,12 @@ export const SEGMENTS = [
   { id: 0, type: "xlm", label: "1 XLM", amount: 1, weight: 14 },
   { id: 1, type: "swag", label: "Sticker Pack", weight: 13 },
   { id: 2, type: "xlm", label: "0.5 XLM", amount: 0.5, weight: 14 },
-  { id: 3, type: "swag", label: "Stellar Tee", weight: 10 },
+  { id: 3, type: "swag", label: "Builder Blocks", weight: 10 },
   { id: 4, type: "xlm", label: "2 XLM", amount: 2, weight: 10 },
   { id: 5, type: "swag", label: "Sticker Pack", weight: 13 },
   { id: 6, type: "xlm", label: "1 XLM", amount: 1, weight: 14 },
   { id: 7, type: "xlm", label: "5 XLM", amount: 5, weight: 5 },
-  { id: 8, type: "swag", label: "Stellar Cap", weight: 6 },
+  { id: 8, type: "swag", label: "Builder Blocks", weight: 6 },
   { id: 9, type: "vip", label: "VIP Photo Op ★", weight: 1 },
 ];
 
