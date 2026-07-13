@@ -3,14 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Spin the Wheel — Stellar Arcade</title>
+  <title>Spin the Wheel — Meridian Arcade</title>
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
   <div class="stars"></div>
   <main>
     <header class="site">
-      <h1>🎡 Spin the <span class="gold">Wheel</span></h1>
+      <img class="brandmark" src="/brand/meridian-logo.svg" alt="Meridian 2026 Lisbon" style="height:44px" />
+      <h1>Spin the <span class="gold">Wheel</span></h1>
       <p class="sub">0.5 XLM per spin · up to 3 spins · prizes land in your wallet in seconds</p>
     </header>
 
@@ -51,7 +52,8 @@
     import { pickWallet } from "/js/wallet.js";
     import { fetchWithX402 } from "/js/x402-client.js";
 
-    const COLORS = { xlm: ["#7b61ff", "#5a45c9"], swag: ["#00e0c7", "#00a894"], vip: ["#fdda24", "#e0a800"] };
+    // Meridian 2026: XLM = yellow, swag = white, VIP = black-on-yellow star.
+    const COLORS = { xlm: ["#fedb1d", "#e9c400"], swag: ["#ffffff", "#dfdfdf"], vip: ["#181818", "#050505"] };
     const $ = (id) => document.getElementById(id);
     const canvas = $("wheel"), ctx = canvas.getContext("2d");
 
@@ -75,22 +77,22 @@
         grad.addColorStop(0, c1); grad.addColorStop(1, c2);
         ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R, a0, a1); ctx.closePath();
         ctx.fillStyle = grad; ctx.fill();
-        ctx.strokeStyle = "#0c0e1a"; ctx.lineWidth = 4; ctx.stroke();
+        ctx.strokeStyle = "#0a0a0a"; ctx.lineWidth = 4; ctx.stroke();
         // label
         ctx.save();
         ctx.rotate(a0 + seg / 2);
         ctx.textAlign = "right"; ctx.textBaseline = "middle";
-        ctx.fillStyle = s.type === "vip" ? "#3a2f00" : "#ffffff";
-        ctx.font = `700 ${s.type === "vip" ? 30 : 27}px system-ui, sans-serif`;
+        ctx.fillStyle = s.type === "vip" ? "#fedb1d" : "#0a0a0a";
+        ctx.font = `800 ${s.type === "vip" ? 30 : 27}px "Inter Tight", system-ui, sans-serif`;
         ctx.fillText(s.label, R - 22, 0);
         ctx.restore();
       }
       // hub
       ctx.beginPath(); ctx.arc(0, 0, R * 0.16, 0, 7);
-      ctx.fillStyle = "#161a2e"; ctx.fill();
-      ctx.strokeStyle = "#fdda24"; ctx.lineWidth = 5; ctx.stroke();
-      ctx.fillStyle = "#fdda24"; ctx.font = "700 34px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText("★", 0, 2);
+      ctx.fillStyle = "#0a0a0a"; ctx.fill();
+      ctx.strokeStyle = "#fedb1d"; ctx.lineWidth = 5; ctx.stroke();
+      ctx.fillStyle = "#fedb1d"; ctx.font = "800 34px 'Inter Tight', system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("M", 0, 2);
       ctx.restore();
     }
 
