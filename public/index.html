@@ -8,24 +8,27 @@
 </head>
 <body>
   <div class="stars"></div>
-  <main>
+  <main class="home">
     <header class="site">
       <img class="brandmark" src="/brand/meridian-logo.svg" alt="Meridian 2026 Lisbon" />
-      <div class="eyebrow">&gt; October 28–29 · Convento do Beato · <b>Lisbon</b></div>
       <h1>The <span class="gold">Arcade</span></h1>
-      <p class="sub">Two games. 0.5 XLM entry via <b>x402</b>. Prizes straight to your Meridian Pay wallet.</p>
+      <p class="sub">Pay 0.5 XLM to play. Win XLM on the spot — or something rarer.</p>
     </header>
 
-    <div class="card center">
-      <h2>Spin the Wheel</h2>
-      <p class="muted mt">10 segments. Win XLM, swag, or the rare <span class="gold">VIP Photo Op</span> with a Stellar VIP. Up to 3 spins per wallet.</p>
-      <p class="mt"><a class="btn" href="/wheel/?wallet=contract">Play the Wheel</a></p>
-    </div>
+    <div class="games">
+      <a class="game-card" href="/wheel/?wallet=contract">
+        <h2>Spin the Wheel</h2>
+        <p>Ten segments. XLM prizes, Stellar swag, and one rare shot at a VIP Photo Op.</p>
+        <div class="meta"><span>0.5 XLM / spin</span><span>Up to 3 spins</span></div>
+        <span class="btn">Play the Wheel</span>
+      </a>
 
-    <div class="card center">
-      <h2>Stellar Trivia</h2>
-      <p class="muted mt">10 quick questions on Stellar lore. Every correct answer earns <b class="gold">2 XLM</b>, paid out at the end. One run per wallet.</p>
-      <p class="mt"><a class="btn secondary" href="/trivia/?wallet=contract">Play Trivia</a></p>
+      <a class="game-card" href="/trivia/?wallet=contract">
+        <h2>Stellar Trivia</h2>
+        <p>Ten quick questions on Stellar lore. Every correct answer earns 2 XLM, paid in one go.</p>
+        <div class="meta"><span>0.5 XLM entry</span><span>One run · win up to 20 XLM</span></div>
+        <span class="btn">Play Trivia</span>
+      </a>
     </div>
   </main>
   <footer>Powered by the <a href="https://developers.stellar.org/docs/build/agentic-payments/x402" target="_blank" rel="noopener">x402 protocol on Stellar</a> · Payments settle in ~5 seconds</footer>

@@ -50,10 +50,11 @@ body {
   box-shadow: 0 -24px 0 -1px #161616;
 }
 
-main { position: relative; z-index: 1; width: min(680px, 94vw); padding: 24px 0 60px; }
+main { position: relative; z-index: 1; width: min(680px, 92vw); padding: 24px 0 60px; }
+main.home { display: flex; flex-direction: column; min-height: calc(100vh - 70px); justify-content: center; }
 
-header.site { text-align: center; padding: 30px 0 12px; }
-header.site .brandmark { height: clamp(52px, 11vw, 78px); display: block; margin: 0 auto 14px; }
+header.site { text-align: center; padding: 40px 0 14px; }
+header.site .brandmark { height: clamp(52px, 11vw, 78px); display: block; margin: 0 auto 22px; }
 header.site .eyebrow {
   display: inline-block;
   color: var(--muted);
@@ -74,13 +75,44 @@ header.site .sub { color: var(--muted); margin-top: 10px; font-weight: 500; }
 .gold, .teal { color: var(--yellow); }
 
 .card {
-  background: var(--panel);
-  border: 1px solid var(--line);
+  background: #181818;
+  border: 1px solid #383838;
   border-radius: var(--radius);
   padding: 24px;
   margin-top: 18px;
 }
 .card h2 { font-weight: 800; letter-spacing: -0.01em; }
+
+/* Home: two equal game cards, fully tappable */
+.games { display: grid; gap: 18px; grid-template-columns: 1fr; margin-top: 34px; }
+@media (min-width: 640px) { .games { grid-template-columns: 1fr 1fr; } }
+.game-card {
+  display: flex; flex-direction: column; gap: 14px;
+  background: #1c1c1c;
+  border: 1px solid #444;
+  border-radius: 16px;
+  padding: 30px 26px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.game-card:hover, .game-card:active { border-color: var(--yellow); transform: translateY(-3px); }
+.game-card h2 { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.01em; }
+.game-card p { color: #b9b9b9; line-height: 1.5; flex-grow: 1; }
+.game-card .meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.game-card .meta span {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: #d9d9d9; background: #0f0f0f; border: 1px solid #3a3a3a;
+  padding: 5px 11px; border-radius: 999px;
+}
+.game-card .btn { display: block; width: 100%; text-align: center; margin-top: 4px; }
+
+@media (max-width: 480px) {
+  main { width: 92vw; }
+  header.site { padding-top: 28px; }
+  .game-card { padding: 26px 20px; }
+  .btn { padding: 15px 24px; }
+}
 
 .btn {
   display: inline-block;
